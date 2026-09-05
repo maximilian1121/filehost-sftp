@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: filehost
+
+server:
+  error:
+    whitelabel:
+      enabled: false
+sftp:
+  port: 2222
+  username: admin
+  password: changeme
