@@ -10,3 +10,5 @@ sftp:
   port: 2222
   username: admin
   password: changeme
+  password-auth-enabled: true
+  authorized-keys-file: ./authorized_keys
