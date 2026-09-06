@@ -1,7 +1,6 @@
 package ca.maximilian.maxsfilehost;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -31,31 +30,8 @@ public class FileController {
 
     private final Path baseDir = Paths.get("./files").toAbsolutePath().normalize();
 
-    @Getter
-    public enum HashAlgorithm {
-        MD2("MD2"),
-        MD5("MD5"),
-        SHA_1("SHA-1"),
-        SHA_224("SHA-224"),
-        SHA_256("SHA-256"),
-        SHA_384("SHA-384"),
-        SHA_512("SHA-512"),
-        SHA_512_224("SHA-512/224"),
-        SHA_512_256("SHA-512/256"),
-        SHA3_224("SHA3-224"),
-        SHA3_256("SHA3-256"),
-        SHA3_384("SHA3-384"),
-        SHA3_512("SHA3-512");
-
-        private final String algorithmName;
-
-        HashAlgorithm(String algorithmName) {
-            this.algorithmName = algorithmName;
-        }
-    }
-
     @GetMapping("/**")
-    public ResponseEntity<Resource> getFile(
+    public ResponseEntity<Object> getFile(
             HttpServletRequest request,
             @RequestParam(value = "dl", required = false) String dl,
             @RequestParam(value = "hash", required = false) HashAlgorithm hashAlgorithm
@@ -77,6 +53,16 @@ public class FileController {
             Resource resource = new UrlResource(targetPath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
+                if (hashAlgorithm != null) {
+                    String fileHash = calculateFileHash(targetPath, hashAlgorithm.getAlgorithmName());
+                    ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok()
+                            .contentType(MediaType.TEXT_PLAIN);
+
+                    LOGGER.info("Serving file hash at {} with algorithm {}", targetPath, hashAlgorithm);
+
+                    return responseBuilder.body(fileHash);
+                }
+
                 String disposition = (dl != null) ? "attachment" : "inline";
 
                 MediaType mediaType = MediaTypeFactory.getMediaType(resource)
@@ -85,11 +71,6 @@ public class FileController {
                 ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.ok()
                         .contentType(mediaType)
                         .header(HttpHeaders.CONTENT_DISPOSITION, disposition + "; filename=\"" + resource.getFilename() + "\"");
-
-                if (hashAlgorithm != null) {
-                    String fileHash = calculateFileHash(targetPath, hashAlgorithm.getAlgorithmName());
-                    responseBuilder.header("X-File-Hash", fileHash);
-                }
 
                 LOGGER.info("Serving file at {}", targetPath);
 
