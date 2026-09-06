@@ -37,7 +37,7 @@ public class FileController {
             @RequestParam(value = "hash", required = false) HashAlgorithm hashAlgorithm
     ) {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        String filename = path != null ? path.replaceFirst("^/", "") : "";
+        String filename = path != null ? UriUtils.decode(path.replaceFirst("^/", ""), StandardCharsets.UTF_8) : "";
 
         try {
             if (!baseDir.toFile().exists()) {
