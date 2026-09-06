@@ -52,6 +52,10 @@ public class FileController {
                 return ResponseEntity.status(403).body(null);
             }
 
+            if (targetPath.endsWith("index_ignore.txt")) {
+                return ResponseEntity.status(403).body(null);
+            }
+
             Resource resource = new UrlResource(targetPath.toUri());
 
             if (resource.exists() && resource.isReadable()) {
